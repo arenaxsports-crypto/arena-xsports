@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arena Xsports - Automático</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        body { -webkit-tap-highlight-color: transparent; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-slate-950 text-white font-sans">
+
+    <div class="max-w-md mx-auto min-h-screen flex flex-col p-4 pb-20">
+        
+        <header class="text-center mb-6 mt-4">
+            <img src="logo.png" onerror="this.style.display='none'; document.getElementById('textoLogo').style.display='block'" alt="Arena Xsports" class="h-24 mx-auto mb-2 object-contain">
+            <h1 id="textoLogo" class="hidden text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">ARENA XSPORTS</h1>
+            <p class="text-slate-400 text-sm font-medium">Sistema Automático</p>
+        </header>
+
+        <div class="space-y-6">
+            <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">1. Onde vamos jogar?</label>
+                <select id="quadraSelect" class="w-full bg-slate-950 mt-1 p-3 rounded-xl border border-slate-700 text-white outline-none focus:border-yellow-500 transition appearance-none">
+                    <option>Carregando...</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="text-xs font-bold text-yellow-500 uppercase tracking-wider mb-3 block px-1">2. Qual o esporte?</label>
+                <input type="hidden" id="esporteInput" value="">
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div onclick="selecionarEsporte(this, 'Futevôlei')" class="opcao-esporte relative h-32 rounded-xl cursor-pointer border-2 border-transparent hover:border-yellow-500 transition overflow-hidden group">
+                        <img src="futevolei.jpg" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-110 transition duration-500" onerror="this.src='https://images.unsplash.com/photo-1628891435256-3f7467655075?q=80&w=400&auto=format&fit=crop'">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+                        <span class="absolute bottom-3 left-3 font-bold text-white text-lg shadow-black drop-shadow-lg">Futevôlei</span>
+                    </div>
+                    <div onclick="selecionarEsporte(this, 'Beach Tennis')" class="opcao-esporte relative h-32 rounded-xl cursor-pointer border-2 border-transparent hover:border-yellow-500 transition overflow-hidden group">
+                        <img src="beach.jpg" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-110 transition duration-500" onerror="this.src='https://images.unsplash.com/photo-1627627447477-90c74f26040f?q=80&w=400&auto=format&fit=crop'">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+                        <span class="absolute bottom-3 left-3 font-bold text-white text-lg shadow-black drop-shadow-lg">Beach Tennis</span>
+                    </div>
+                    <div onclick="selecionarEsporte(this, 'Vôlei')" class="opcao-esporte relative h-32 rounded-xl cursor-pointer border-2 border-transparent hover:border-yellow-500 transition overflow-hidden group">
+                        <img src="volei.jpg" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-110 transition duration-500" onerror="this.src='https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?q=80&w=400&auto=format&fit=crop'">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+                        <span class="absolute bottom-3 left-3 font-bold text-white text-lg shadow-black drop-shadow-lg">Vôlei</span>
+                    </div>
+                    <div onclick="selecionarEsporte(this, 'Aula com Professor')" class="opcao-esporte relative h-32 rounded-xl cursor-pointer border-2 border-transparent hover:border-yellow-500 transition overflow-hidden group">
+                        <img src="aula.jpg" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-110 transition duration-500" onerror="this.src='https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=400&auto=format&fit=crop'">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+                        <span class="absolute bottom-3 left-3 font-bold text-blue-300 text-lg shadow-black drop-shadow-lg flex items-center gap-1">🎓 Aulas</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">3. Data</label>
+                <input type="date" id="dataInput" class="w-full bg-slate-950 mt-1 p-3 rounded-xl border border-slate-700 text-white outline-none focus:border-yellow-500 color-scheme-dark transition">
+            </div>
+        </div>
+
+        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mt-8 mb-4 px-1">4. Horários (Clique para Agendar ou Cancelar)</h3>
+        <div id="grade" class="grid grid-cols-4 gap-2">
+            <div class="col-span-4 text-center py-8 bg-slate-900/50 rounded-xl border border-slate-800 border-dashed text-slate-500 text-sm">Selecione data e esporte...</div>
+        </div>
+    </div>
+
+    <div id="modalAgendar" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="bg-slate-900 w-full max-w-sm p-6 rounded-2xl border border-slate-700 shadow-2xl">
+            <h3 class="text-xl font-bold text-white mb-1">Confirmar Agendamento</h3>
+            <p id="resumo" class="text-sm text-slate-400 mb-6 border-l-4 border-yellow-500 pl-3 py-1 ml-1"></p>
+            
+            <div class="space-y-3">
+                <input type="text" id="nome" placeholder="Seu Nome" class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-white outline-none focus:border-yellow-500 transition">
+                <input type="tel" id="zap" placeholder="Seu WhatsApp" class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-white outline-none focus:border-yellow-500 transition">
+                
+                <div class="bg-slate-800 p-3 rounded-xl border border-slate-700 mt-2">
+                    <label class="text-xs text-yellow-500 font-bold uppercase mb-1 block">Crie uma senha (Para cancelar depois)</label>
+                    <input type="number" id="senhaCriar" placeholder="Ex: 1234" class="w-full p-2 bg-slate-950 border border-slate-600 rounded text-white text-center tracking-widest font-bold outline-none focus:border-yellow-500">
+                </div>
+            </div>
+            
+            <div class="flex gap-3 mt-6">
+                <button onclick="document.getElementById('modalAgendar').classList.add('hidden')" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-300 font-bold transition">Voltar</button>
+                <button onclick="salvar()" class="flex-1 py-3 bg-yellow-500 hover:bg-yellow-400 text-slate-900 rounded-xl font-bold transition shadow-lg shadow-yellow-500/20">Agendar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalCancelar" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="bg-slate-900 w-full max-w-sm p-6 rounded-2xl border border-red-900/50 shadow-2xl">
+            <h3 class="text-xl font-bold text-red-500 mb-1">Horário Ocupado</h3>
+            <p class="text-sm text-slate-400 mb-6">Este horário já foi reservado. Se foi você, digite sua senha para cancelar.</p>
+            
+            <div class="space-y-3">
+                <input type="password" id="senhaCancelar" placeholder="Digite a senha criada" class="w-full p-4 bg-slate-950 border border-slate-700 rounded-xl text-white text-center outline-none focus:border-red-500 transition">
+                <input type="hidden" id="idParaCancelar">
+            </div>
+            
+            <div class="flex gap-3 mt-6">
+                <button onclick="document.getElementById('modalCancelar').classList.add('hidden')" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-300 font-bold transition">Voltar</button>
+                <button onclick="confirmarCancelamento()" class="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold transition shadow-lg shadow-red-600/20">Cancelar Horário</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURAÇÃO
+        const SUPABASE_URL = 'https://gmzzegzgbhwcxbosprtf.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtenplZ3pnYmh3Y3hib3NwcnRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxMTQxMTcsImV4cCI6MjA4NTY5MDExN30.RRb9eoCUyrUdZmoql6Qib5fuE41TY-df7VgeyRy5Zk4';
+        const SEU_ZAP = '5588992746840'; 
+
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const els = { quadra: document.getElementById('quadraSelect'), data: document.getElementById('dataInput'), grade: document.getElementById('grade') };
+        let selecionado = {};
+
+        function selecionarEsporte(elemento, esporteNome) {
+            document.querySelectorAll('.opcao-esporte').forEach(el => {
+                el.classList.remove('ring-4', 'ring-yellow-500', 'scale-95');
+                el.querySelector('img').classList.remove('opacity-100', 'scale-110');
+                el.querySelector('img').classList.add('opacity-60');
+            });
+            elemento.classList.add('ring-4', 'ring-yellow-500', 'scale-95');
+            elemento.querySelector('img').classList.remove('opacity-60');
+            elemento.querySelector('img').classList.add('opacity-100', 'scale-110');
+            document.getElementById('esporteInput').value = esporteNome;
+        }
+
+        async function init() {
+            els.data.valueAsDate = new Date();
+            try {
+                const { data } = await sb.from('quadras').select('*').order('nome', { ascending: true });
+                if(data) {
+                    els.quadra.innerHTML = data.map(q => `<option value="${q.id}">${q.nome}</option>`).join('');
+                    renderGrade(); 
+                }
+            } catch (err) {}
+        }
+
+        async function renderGrade() {
+            if(!els.data.value) return;
+            els.grade.innerHTML = '<div class="col-span-4 text-center py-8 text-slate-500 animate-pulse">Verificando agenda...</div>';
+            
+            const dataStr = els.data.value;
+            const qId = els.quadra.value;
+            
+            try {
+                // Busca ID e HORA para saber quem é quem
+                const { data: ocupados } = await sb.from('agendamentos').select('id, hora_inicio').eq('data_reserva', dataStr).eq('quadra_id', qId);
+                
+                // Cria um mapa simples: '16:00' -> ID 123
+                let mapaOcupados = {};
+                if(ocupados) ocupados.forEach(item => { mapaOcupados[item.hora_inicio.slice(0,5)] = item.id; });
+
+                const horarios = ['07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00','23:00'];
+                
+                els.grade.innerHTML = horarios.map(h => {
+                    const idOcupado = mapaOcupados[h]; // Se existir ID, está ocupado
+                    
+                    if(idOcupado) {
+                        // OCUPADO (Agora Clicável para Cancelar)
+                        return `
+                        <div onclick="abrirCancelar(${idOcupado})" class="p-3 rounded-xl bg-slate-900/50 border border-red-900/30 text-red-500/50 text-center cursor-pointer hover:border-red-500 hover:text-red-500 transition flex flex-col justify-center items-center group">
+                            <span class="text-sm font-bold line-through group-hover:no-underline">${h}</span>
+                            <span class="text-[10px] group-hover:hidden">Ocupado</span>
+                            <span class="text-[10px] hidden group-hover:block text-red-400 font-bold">Cancelar?</span>
+                        </div>`;
+                    }
+                    
+                    // LIVRE
+                    return `
+                    <div onclick="abrirAgendar('${h}')" class="p-3 rounded-xl bg-slate-800 hover:bg-yellow-500 hover:text-black border border-slate-700 hover:border-yellow-500 text-center cursor-pointer transition text-white font-bold shadow-lg flex flex-col justify-center items-center group">
+                        <span class="text-sm">${h}</span>
+                        <span class="text-[10px] text-green-400 group-hover:text-black font-normal">Livre</span>
+                    </div>`;
+                }).join('');
+            } catch (err) { els.grade.innerHTML = 'Erro ao carregar.'; }
+        }
+
+        window.abrirAgendar = (h) => {
+            const esporte = document.getElementById('esporteInput').value;
+            if(!esporte) { alert("Selecione o esporte na foto!"); document.querySelector('.grid-cols-2').scrollIntoView({behavior:'smooth'}); return; }
+            selecionado.hora = h;
+            const nomeQuadra = els.quadra.options[els.quadra.selectedIndex].text;
+            document.getElementById('resumo').innerHTML = `<div class="font-bold text-white text-lg">${esporte}</div><div class="text-slate-400 text-xs uppercase mt-1 tracking-wide">${nomeQuadra}<br>${els.data.value.split('-').reverse().join('/')} às <span class="text-yellow-500 font-bold">${h}</span></div>`;
+            document.getElementById('modalAgendar').classList.remove('hidden');
+        }
+
+        window.abrirCancelar = (id) => {
+            document.getElementById('idParaCancelar').value = id;
+            document.getElementById('senhaCancelar').value = '';
+            document.getElementById('modalCancelar').classList.remove('hidden');
+        }
+
+        window.salvar = async () => {
+            const nome = document.getElementById('nome').value;
+            const zap = document.getElementById('zap').value;
+            const senha = document.getElementById('senhaCriar').value;
+            const esporte = document.getElementById('esporteInput').value;
+
+            if(!nome || !zap || !senha) return alert('Preencha nome, zap e crie uma senha!');
+
+            const nomeFinal = `${nome} (${esporte})`;
+            const { error } = await sb.from('agendamentos').insert({ 
+                quadra_id: els.quadra.value, 
+                cliente_nome: nomeFinal, 
+                cliente_whatsapp: zap, 
+                data_reserva: els.data.value, 
+                hora_inicio: selecionado.hora,
+                senha_cancelamento: senha // Salva a senha
+            });
+
+            if(error) { alert('Ops! Alguém já reservou.'); renderGrade(); } 
+            else {
+                let tipo = esporte.includes('Aula') ? '🎓 Agendamento de AULA' : '⚽ Agendamento de QUADRA';
+                const msg = `Olá! ${tipo} na Arena Xsports.\n\n👤 *${nome}*\n🏟️ *${els.quadra.options[els.quadra.selectedIndex].text}*\n👉 Modalidade: *${esporte}*\n📅 *${els.data.value.split('-').reverse().join('/')}*\n⏰ *${selecionado.hora}*\n🔑 *Minha Senha: ${senha}*`;
+                window.location.href = `https://wa.me/${SEU_ZAP}?text=${encodeURIComponent(msg)}`;
+            }
+        }
+
+        window.confirmarCancelamento = async () => {
+            const id = document.getElementById('idParaCancelar').value;
+            const senha = document.getElementById('senhaCancelar').value;
+            
+            if(!senha) return alert("Digite a senha!");
+
+            // Tenta deletar onde ID e SENHA batem
+            const { error, data, count } = await sb.from('agendamentos').delete().eq('id', id).eq('senha_cancelamento', senha).select();
+
+            if(data && data.length > 0) {
+                alert("Agendamento cancelado com sucesso!");
+                document.getElementById('modalCancelar').classList.add('hidden');
+                renderGrade();
+            } else {
+                alert("Senha incorreta ou erro ao cancelar.");
+            }
+        }
+
+        els.data.addEventListener('change', renderGrade);
+        els.quadra.addEventListener('change', renderGrade);
+        init();
+    </script>
+</body>
+</html>

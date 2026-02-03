@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Pro - Arena Xsports</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-950 text-white min-h-screen flex flex-col">
+
+    <div id="telaAuth" class="flex flex-1 items-center justify-center p-4">
+        <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 w-full max-w-sm shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 to-orange-600"></div>
+            <h2 id="tituloAuth" class="text-2xl font-extrabold text-white text-center mb-2 tracking-tight">AREA RESTRITA</h2>
+            <p id="subtituloAuth" class="text-slate-400 text-sm text-center mb-8">Gestão Arena Xsports</p>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">E-mail</label>
+                    <input type="email" id="email" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white focus:border-yellow-500 outline-none transition">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Senha</label>
+                    <input type="password" id="senha" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white focus:border-yellow-500 outline-none transition">
+                </div>
+            </div>
+            <button id="btnAcao" onclick="login()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold py-3.5 rounded-lg mt-8 transition shadow-lg shadow-yellow-500/20">ACESSAR PAINEL</button>
+            <p id="msgErro" class="text-red-400 text-center text-sm mt-4 hidden font-medium"></p>
+            <div class="text-center mt-6 pt-6 border-t border-slate-800">
+                <button id="btnTroca" onclick="alternarModo()" class="text-xs text-slate-500 hover:text-yellow-500 transition">Criar conta de acesso</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="painelDados" class="hidden w-full max-w-3xl mx-auto p-4 pb-20">
+        
+        <div class="flex flex-col md:flex-row justify-between items-center py-6 mb-4 gap-4">
+            <div>
+                <h1 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">PAINEL ADMIN</h1>
+                <p class="text-xs text-slate-400 font-medium tracking-wide">VISÃO GERAL</p>
+            </div>
+            <div class="flex gap-2 w-full md:w-auto">
+                <button onclick="abrirBloqueio()" class="flex-1 md:flex-none bg-red-900/40 hover:bg-red-900/60 text-red-400 border border-red-900/50 px-4 py-3 rounded-xl transition font-bold text-sm flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
+                    Bloquear Horário
+                </button>
+                
+                <button onclick="abrirConfig()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 p-3 rounded-xl transition border border-slate-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                </button>
+                <button onclick="sair()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 p-3 rounded-xl transition border border-slate-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                </button>
+            </div>
+        </div>
+        
+        <div id="lista" class="space-y-3">
+            <p class="text-slate-500 text-center py-10 animate-pulse">Buscando dados...</p>
+        </div>
+    </div>
+
+    <div id="modalConfig" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-700 w-full max-w-sm">
+            <h3 class="text-xl font-bold text-white mb-6">Configurações</h3>
+            <div class="bg-slate-800 p-4 rounded-xl mb-4 border border-slate-700">
+                <p class="text-xs font-bold text-slate-500 uppercase mb-2">Alterar Senha</p>
+                <input type="password" id="novaSenha" placeholder="Nova senha" class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white text-sm mb-2 outline-none focus:border-yellow-500">
+                <button onclick="alterarSenha()" class="w-full bg-slate-700 hover:bg-white hover:text-black text-white text-sm font-bold py-2 rounded transition">Salvar Nova Senha</button>
+            </div>
+            <button onclick="document.getElementById('modalConfig').classList.add('hidden')" class="w-full py-3 text-slate-400 hover:text-white font-medium text-sm">Fechar</button>
+        </div>
+    </div>
+
+    <div id="modalBloqueio" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-700 w-full max-w-sm">
+            <h3 class="text-xl font-bold text-red-400 mb-1">Bloquear Horário</h3>
+            <p class="text-slate-400 text-xs mb-6">Isso impedirá agendamentos neste horário.</p>
+            
+            <div class="space-y-3">
+                <div>
+                    <label class="text-xs font-bold text-slate-500">Motivo</label>
+                    <input type="text" id="motivoBloqueio" value="BLOQUEADO / MANUTENÇÃO" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white text-sm outline-none">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-500">Quadra</label>
+                    <select id="selectQuadra" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white text-sm outline-none">
+                        <option>Carregando...</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-500">Data</label>
+                    <input type="date" id="dataBloqueio" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white text-sm outline-none color-scheme-dark">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-500">Horário</label>
+                    <select id="horaBloqueio" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white text-sm outline-none">
+                        <option value="07:00">07:00</option><option value="08:00">08:00</option><option value="09:00">09:00</option>
+                        <option value="10:00">10:00</option><option value="11:00">11:00</option><option value="12:00">12:00</option>
+                        <option value="13:00">13:00</option><option value="14:00">14:00</option><option value="15:00">15:00</option>
+                        <option value="16:00">16:00</option><option value="17:00">17:00</option><option value="18:00">18:00</option>
+                        <option value="19:00">19:00</option><option value="20:00">20:00</option><option value="21:00">21:00</option>
+                        <option value="22:00">22:00</option><option value="23:00">23:00</option>
+                    </select>
+                </div>
+                
+                <button onclick="salvarBloqueio()" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded mt-2 transition">CONFIRMAR BLOQUEIO</button>
+            </div>
+            
+            <button onclick="document.getElementById('modalBloqueio').classList.add('hidden')" class="w-full py-3 text-slate-400 hover:text-white font-medium text-sm mt-2">Cancelar</button>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURAÇÃO
+        const SUPABASE_URL = 'https://gmzzegzgbhwcxbosprtf.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtenplZ3pnYmh3Y3hib3NwcnRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxMTQxMTcsImV4cCI6MjA4NTY5MDExN30.RRb9eoCUyrUdZmoql6Qib5fuE41TY-df7VgeyRy5Zk4';
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let modoCadastro = false;
+        
+        // Ícones
+        const ICONS = {
+            bola: `<svg class="text-yellow-500" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 12v.01"></path><path d="M5.64 5.64l1.41 1.41"></path><path d="M18.36 18.36l-1.41-1.41"></path><path d="M5.64 18.36l1.41-1.41"></path><path d="M18.36 5.64l-1.41 1.41"></path></svg>`,
+            raquete: `<svg class="text-green-400" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h8"></path><path d="M12 8v8"></path><path d="M4.93 4.93l14.14 14.14"></path></svg>`,
+            aula: `<svg class="text-blue-400" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>`,
+            bloqueio: `<svg class="text-red-500" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>`,
+            padrao: `<svg class="text-slate-400" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`
+        };
+
+        sb.auth.onAuthStateChange((event, session) => {
+            if (session) mostrarPainel(session.user.email);
+            else mostrarLogin();
+        });
+
+        // --- FUNÇÕES DE LOGIN/CADASTRO ---
+        function alternarModo() {
+            modoCadastro = !modoCadastro;
+            const titulo = document.getElementById('tituloAuth');
+            const btn = document.getElementById('btnAcao');
+            const troca = document.getElementById('btnTroca');
+            document.getElementById('msgErro').classList.add('hidden');
+
+            if (modoCadastro) {
+                titulo.innerText = "NOVO ACESSO";
+                btn.innerText = "CADASTRAR";
+                btn.onclick = cadastrar;
+                troca.innerText = "Voltar para Login";
+            } else {
+                titulo.innerText = "ÁREA RESTRITA";
+                btn.innerText = "ACESSAR PAINEL";
+                btn.onclick = login;
+                troca.innerText = "Criar conta de acesso";
+            }
+        }
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('senha').value;
+            if(!email || !pass) return alert("Preencha tudo!");
+            const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+            if (error) { document.getElementById('msgErro').innerText = "E-mail ou senha incorretos"; document.getElementById('msgErro').classList.remove('hidden'); }
+        }
+
+        async function cadastrar() {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('senha').value;
+            if(pass.length < 6) return alert("Senha deve ter 6 números ou mais.");
+            const { error } = await sb.auth.signUp({ email, password: pass });
+            if (error) alert("Erro: " + error.message);
+            else alert("Conta criada! Você já está logado.");
+        }
+
+        async function sair() { await sb.auth.signOut(); window.location.reload(); }
+        
+        function mostrarLogin() { document.getElementById('telaAuth').classList.remove('hidden'); document.getElementById('painelDados').classList.add('hidden'); }
+        function mostrarPainel(email) { document.getElementById('telaAuth').classList.add('hidden'); document.getElementById('painelDados').classList.remove('hidden'); carregarDados(); }
+
+        // --- FUNÇÕES DE GERENCIAMENTO ---
+        
+        function abrirConfig() { document.getElementById('modalConfig').classList.remove('hidden'); }
+        async function alterarSenha() {
+            const nova = document.getElementById('novaSenha').value;
+            if(nova.length < 6) return alert("A senha deve ter 6 digitos no mínimo");
+            const { error } = await sb.auth.updateUser({ password: nova });
+            if(error) alert("Erro ao trocar senha"); else { alert("Senha alterada!"); document.getElementById('modalConfig').classList.add('hidden'); }
+        }
+
+        // BLOQUEIO
+        async function abrirBloqueio() {
+            document.getElementById('modalBloqueio').classList.remove('hidden');
+            // Carrega quadras no select
+            const { data } = await sb.from('quadras').select('*').order('nome');
+            if(data) {
+                document.getElementById('selectQuadra').innerHTML = data.map(q => `<option value="${q.id}">${q.nome}</option>`).join('');
+            }
+        }
+
+        async function salvarBloqueio() {
+            const motivo = document.getElementById('motivoBloqueio').value;
+            const qId = document.getElementById('selectQuadra').value;
+            const data = document.getElementById('dataBloqueio').value;
+            const hora = document.getElementById('horaBloqueio').value;
+
+            if(!data) return alert("Escolha uma data!");
+
+            const { error } = await sb.from('agendamentos').insert({
+                quadra_id: qId,
+                cliente_nome: motivo,
+                cliente_whatsapp: '00000000000', // Numero ficticio para bloqueio
+                data_reserva: data,
+                hora_inicio: hora
+            });
+
+            if(error) alert("Erro! Talvez já exista agendamento neste horário.");
+            else {
+                alert("Horário bloqueado com sucesso!");
+                document.getElementById('modalBloqueio').classList.add('hidden');
+                carregarDados();
+            }
+        }
+
+        // CANCELAR / APAGAR
+        async function cancelar(id, nome) {
+            if(confirm(`Tem certeza que deseja cancelar/apagar o agendamento de:\n${nome}?`)) {
+                const { error } = await sb.from('agendamentos').delete().eq('id', id);
+                if(error) alert("Erro ao apagar.");
+                else carregarDados();
+            }
+        }
+
+        // CARREGAR LISTA
+        async function carregarDados() {
+            const { data, error } = await sb
+                .from('agendamentos')
+                .select('*, quadras(nome)')
+                .order('data_reserva', { ascending: false })
+                .order('hora_inicio', { ascending: true });
+
+            const divLista = document.getElementById('lista');
+
+            if (!data || data.length === 0) {
+                divLista.innerHTML = '<div class="text-center p-10 bg-slate-800/50 border border-slate-800 rounded-2xl"><p class="text-slate-500 font-medium">Nenhum agendamento encontrado.</p></div>';
+                return;
+            }
+
+            divLista.innerHTML = data.map(item => {
+                const dataFormatada = item.data_reserva.split('-').reverse().join('/');
+                const horaFormatada = item.hora_inicio.slice(0,5);
+                
+                // Ícone e Cor
+                let icone = ICONS.padrao;
+                let borderClass = 'border-l-4 border-l-yellow-500';
+                
+                if(item.cliente_nome.includes('Aula')) { icone = ICONS.aula; borderClass = 'border-l-4 border-l-blue-500'; }
+                else if(item.cliente_nome.includes('Beach')) { icone = ICONS.raquete; }
+                else if(item.cliente_nome.includes('Futevôlei') || item.cliente_nome.includes('Vôlei')) { icone = ICONS.bola; }
+                else if(item.cliente_nome.includes('BLOQUEADO')) { icone = ICONS.bloqueio; borderClass = 'border-l-4 border-l-red-600 bg-red-900/10'; }
+
+                return `
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center group hover:bg-slate-750 transition ${borderClass} shadow-lg shadow-black/20">
+                    <div class="flex items-center gap-4">
+                        <div class="p-3 bg-slate-900 rounded-lg border border-slate-700 group-hover:border-slate-500 transition">
+                            ${icone}
+                        </div>
+                        <div>
+                            <p class="text-white font-bold text-base tracking-wide">${item.cliente_nome}</p>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-xs font-bold bg-slate-900 text-slate-300 px-2 py-0.5 rounded border border-slate-700">${horaFormatada}</span>
+                                <span class="text-xs text-slate-400">📅 ${dataFormatada}</span>
+                            </div>
+                            <p class="text-slate-500 text-[10px] uppercase font-bold mt-1 tracking-wider">${item.quadras ? item.quadras.nome : 'Quadra'}</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        ${!item.cliente_nome.includes('BLOQUEADO') ? `
+                        <a href="https://wa.me/${item.cliente_whatsapp}" target="_blank" class="bg-green-600 hover:bg-green-500 text-white p-3 rounded-xl shadow-lg transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                        </a>` : ''}
+                        
+                        <button onclick="cancelar(${item.id}, '${item.cliente_nome}')" class="bg-red-900/30 hover:bg-red-600 text-red-500 hover:text-white p-3 rounded-xl border border-red-900/50 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        </button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+    </script>
+</body>
+</html>
