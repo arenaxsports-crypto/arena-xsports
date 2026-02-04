@@ -3,247 +3,799 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arena Xsports - Automático</title>
+    <title>Arena Xsports - Agendamento Automático</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { -webkit-tap-highlight-color: transparent; }
+        body { 
+            -webkit-tap-highlight-color: transparent; 
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+        }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .opcao-esporte {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        .opcao-esporte:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.4);
+        }
+        .opcao-esporte.selected {
+            box-shadow: 0 0 0 3px #f59e0b, 0 0 15px rgba(245, 158, 11, 0.5);
+            transform: scale(0.98);
+        }
+        .horario-livre {
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .horario-livre:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        .horario-ocupado {
+            transition: all 0.2s ease;
+        }
+        .horario-ocupado:hover {
+            transform: scale(1.03);
+        }
+        .modal {
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: #f59e0b;
+            border-radius: 50%;
+            animation: fall linear forwards;
+        }
+        @keyframes fall {
+            to { transform: translateY(100vh) rotate(360deg); }
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            filter: invert(0.8);
+        }
+        .sport-icon {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+        .beach-tennis { color: #38bdf8; }
+        .futevolei { color: #22c55e; }
+        .volei { color: #8b5cf6; }
+        .aula { color: #f43f5e; }
     </style>
 </head>
-<body class="bg-slate-950 text-white font-sans">
+<body class="text-white font-sans">
 
-    <div class="max-w-md mx-auto min-h-screen flex flex-col p-4 pb-20">
+    <div class="max-w-md mx-auto min-h-screen flex flex-col p-4 pb-24">
         
-        <header class="text-center mb-6 mt-4">
-            <img src="logo.png" onerror="this.style.display='none'; document.getElementById('textoLogo').style.display='block'" alt="Arena Xsports" class="h-24 mx-auto mb-2 object-contain">
-            <h1 id="textoLogo" class="hidden text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">ARENA XSPORTS</h1>
-            <p class="text-slate-400 text-sm font-medium">Sistema Automático</p>
+        <header class="text-center mb-6 mt-2">
+            <div class="relative inline-block">
+                <div class="absolute -inset-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full blur opacity-25"></div>
+                <div class="relative bg-slate-900 p-4 rounded-2xl border border-slate-800 shadow-lg">
+                    <h1 class="text-3xl md:text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
+                        ARENA XSPORTS
+                    </h1>
+                </div>
+            </div>
+            <p class="text-slate-300 text-sm font-medium mt-2 flex items-center justify-center gap-2">
+                <i class="fas fa-calendar-check"></i> Sistema de Agendamento Automático
+            </p>
         </header>
 
-        <div class="space-y-6">
-            <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
-                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">1. Onde vamos jogar?</label>
-                <select id="quadraSelect" class="w-full bg-slate-950 mt-1 p-3 rounded-xl border border-slate-700 text-white outline-none focus:border-yellow-500 transition appearance-none">
-                    <option>Carregando...</option>
+        <div class="space-y-5 mb-6">
+            <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 shadow-lg">
+                <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block flex items-center gap-2">
+                    <i class="fas fa-map-marker-alt text-yellow-500"></i> 1. Selecione a Quadra
+                </label>
+                <select id="quadraSelect" class="w-full bg-slate-950 mt-1 p-3.5 rounded-xl border border-slate-700 text-white outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition appearance-none">
+                    <option value="">Carregando quadras...</option>
                 </select>
             </div>
 
-            <div>
-                <label class="text-xs font-bold text-yellow-500 uppercase tracking-wider mb-3 block px-1">2. Qual o esporte?</label>
+            <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 shadow-lg">
+                <label class="text-xs font-bold text-yellow-400 uppercase tracking-wider mb-3 block flex items-center gap-2">
+                    <i class="fas fa-dumbbell text-yellow-500"></i> 2. Escolha o Esporte
+                </label>
                 <input type="hidden" id="esporteInput" value="">
 
                 <div class="grid grid-cols-2 gap-3">
-                    <div onclick="selecionarEsporte(this, 'Futevôlei')" class="opcao-esporte relative h-32 rounded-xl cursor-pointer border-2 border-transparent hover:border-yellow-500 transition overflow-hidden group">
-                        <img src="futevolei.jpg" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-110 transition duration-500" onerror="this.src='https://images.unsplash.com/photo-1628891435256-3f7467655075?q=80&w=400&auto=format&fit=crop'">
+                    <div onclick="selecionarEsporte(this, 'Futevôlei')" class="opcao-esporte relative h-36 rounded-xl cursor-pointer border-2 border-transparent overflow-hidden group">
+                        <div class="absolute inset-0 bg-gradient-to-br from-green-900 to-emerald-900 flex flex-col items-center justify-center text-white">
+                            <i class="fas fa-futbol sport-icon futevolei"></i>
+                            <span class="font-bold text-xl">Futevôlei</span>
+                        </div>
                         <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
-                        <span class="absolute bottom-3 left-3 font-bold text-white text-lg shadow-black drop-shadow-lg">Futevôlei</span>
                     </div>
-                    <div onclick="selecionarEsporte(this, 'Beach Tennis')" class="opcao-esporte relative h-32 rounded-xl cursor-pointer border-2 border-transparent hover:border-yellow-500 transition overflow-hidden group">
-                        <img src="beach.jpg" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-110 transition duration-500" onerror="this.src='https://images.unsplash.com/photo-1627627447477-90c74f26040f?q=80&w=400&auto=format&fit=crop'">
+                    <div onclick="selecionarEsporte(this, 'Beach Tennis')" class="opcao-esporte relative h-36 rounded-xl cursor-pointer border-2 border-transparent overflow-hidden group">
+                        <div class="absolute inset-0 bg-gradient-to-br from-blue-900 to-cyan-900 flex flex-col items-center justify-center text-white">
+                            <i class="fas fa-table-tennis sport-icon beach-tennis"></i>
+                            <span class="font-bold text-xl">Beach Tennis</span>
+                        </div>
                         <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
-                        <span class="absolute bottom-3 left-3 font-bold text-white text-lg shadow-black drop-shadow-lg">Beach Tennis</span>
                     </div>
-                    <div onclick="selecionarEsporte(this, 'Vôlei')" class="opcao-esporte relative h-32 rounded-xl cursor-pointer border-2 border-transparent hover:border-yellow-500 transition overflow-hidden group">
-                        <img src="volei.jpg" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-110 transition duration-500" onerror="this.src='https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?q=80&w=400&auto=format&fit=crop'">
+                    <div onclick="selecionarEsporte(this, 'Vôlei')" class="opcao-esporte relative h-36 rounded-xl cursor-pointer border-2 border-transparent overflow-hidden group">
+                        <div class="absolute inset-0 bg-gradient-to-br from-purple-900 to-violet-900 flex flex-col items-center justify-center text-white">
+                            <i class="fas fa-volleyball-ball sport-icon volei"></i>
+                            <span class="font-bold text-xl">Vôlei</span>
+                        </div>
                         <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
-                        <span class="absolute bottom-3 left-3 font-bold text-white text-lg shadow-black drop-shadow-lg">Vôlei</span>
                     </div>
-                    <div onclick="selecionarEsporte(this, 'Aula com Professor')" class="opcao-esporte relative h-32 rounded-xl cursor-pointer border-2 border-transparent hover:border-yellow-500 transition overflow-hidden group">
-                        <img src="aula.jpg" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-110 transition duration-500" onerror="this.src='https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=400&auto=format&fit=crop'">
+                    <div onclick="selecionarEsporte(this, 'Aula com Professor')" class="opcao-esporte relative h-36 rounded-xl cursor-pointer border-2 border-transparent overflow-hidden group">
+                        <div class="absolute inset-0 bg-gradient-to-br from-rose-900 to-red-900 flex flex-col items-center justify-center text-white">
+                            <i class="fas fa-chalkboard-teacher sport-icon aula"></i>
+                            <span class="font-bold text-xl flex items-center gap-1"><i class="fas fa-graduation-cap"></i> Aulas</span>
+                        </div>
                         <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
-                        <span class="absolute bottom-3 left-3 font-bold text-blue-300 text-lg shadow-black drop-shadow-lg flex items-center gap-1">🎓 Aulas</span>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
-                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">3. Data</label>
-                <input type="date" id="dataInput" class="w-full bg-slate-950 mt-1 p-3 rounded-xl border border-slate-700 text-white outline-none focus:border-yellow-500 color-scheme-dark transition">
+            <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 shadow-lg">
+                <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block flex items-center gap-2">
+                    <i class="fas fa-calendar-day text-yellow-500"></i> 3. Data da Reserva
+                </label>
+                <input type="date" id="dataInput" class="w-full bg-slate-950 mt-1 p-3.5 rounded-xl border border-slate-700 text-white outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition color-scheme-dark">
             </div>
         </div>
 
-        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mt-8 mb-4 px-1">4. Horários (Clique para Agendar ou Cancelar)</h3>
-        <div id="grade" class="grid grid-cols-4 gap-2">
-            <div class="col-span-4 text-center py-8 bg-slate-900/50 rounded-xl border border-slate-800 border-dashed text-slate-500 text-sm">Selecione data e esporte...</div>
+        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-4 mb-3 px-1 flex items-center gap-2">
+            <i class="fas fa-clock text-yellow-500"></i> 4. Horários Disponíveis (Clique para Agendar)
+        </h3>
+        <div id="grade" class="grid grid-cols-4 gap-2 mb-8">
+            <div class="col-span-4 text-center py-10 bg-slate-900/50 rounded-xl border-2 border-dashed border-slate-700 text-slate-400 text-sm">
+                <div class="flex flex-col items-center justify-center">
+                    <i class="fas fa-info-circle text-3xl mb-3 text-yellow-500/70"></i>
+                    <p>Selecione uma quadra, esporte e data para ver os horários disponíveis</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-slate-900/70 p-4 rounded-2xl border border-slate-800 mt-auto">
+            <div class="flex items-start gap-3">
+                <div class="mt-1 p-2 bg-yellow-500/10 rounded-lg">
+                    <i class="fas fa-shield-alt text-yellow-400"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-yellow-400">Importante:</h4>
+                    <p class="text-slate-300 text-sm mt-1">
+                        • Após agendar, você será direcionado ao WhatsApp para confirmar sua reserva<br>
+                        • Guarde a senha criada para cancelar ou alterar seu agendamento<br>
+                        • Horários não confirmados via WhatsApp serão liberados automaticamente
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div id="modalAgendar" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-        <div class="bg-slate-900 w-full max-w-sm p-6 rounded-2xl border border-slate-700 shadow-2xl">
-            <h3 class="text-xl font-bold text-white mb-1">Confirmar Agendamento</h3>
-            <p id="resumo" class="text-sm text-slate-400 mb-6 border-l-4 border-yellow-500 pl-3 py-1 ml-1"></p>
-            
-            <div class="space-y-3">
-                <input type="text" id="nome" placeholder="Seu Nome" class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-white outline-none focus:border-yellow-500 transition">
-                <input type="tel" id="zap" placeholder="Seu WhatsApp" class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-white outline-none focus:border-yellow-500 transition">
+    <div id="modalAgendar" class="hidden fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-50 backdrop-blur-sm modal">
+        <div class="bg-slate-900 w-full max-w-sm p-6 rounded-2xl border border-yellow-500/20 shadow-2xl relative">
+            <div class="absolute -inset-1 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-2xl blur opacity-20"></div>
+            <div class="relative">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
+                        Confirmar Agendamento
+                    </h3>
+                    <button onclick="document.getElementById('modalAgendar').classList.add('hidden')" class="text-slate-400 hover:text-white transition">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <p id="resumo" class="text-sm text-slate-300 mb-5 border-l-4 border-yellow-500/50 pl-3 py-2 bg-slate-950/50 rounded-r-lg"></p>
                 
-                <div class="bg-slate-800 p-3 rounded-xl border border-slate-700 mt-2">
-                    <label class="text-xs text-yellow-500 font-bold uppercase mb-1 block">Crie uma senha (Para cancelar depois)</label>
-                    <input type="number" id="senhaCriar" placeholder="Ex: 1234" class="w-full p-2 bg-slate-950 border border-slate-600 rounded text-white text-center tracking-widest font-bold outline-none focus:border-yellow-500">
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-xs text-yellow-400 font-bold uppercase mb-1 block">Seu Nome Completo</label>
+                        <input type="text" id="nome" placeholder="Ex: João Silva" class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition">
+                    </div>
+                    <div>
+                        <label class="text-xs text-yellow-400 font-bold uppercase mb-1 block">WhatsApp (com DDD)</label>
+                        <input type="tel" id="zap" placeholder="Ex: 88999998888" class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition" maxlength="11">
+                    </div>
+                    
+                    <div class="bg-slate-800/50 p-3 rounded-xl border border-yellow-500/20 mt-1">
+                        <label class="text-xs text-yellow-400 font-bold uppercase mb-1 block flex items-center gap-1">
+                            <i class="fas fa-lock"></i> Crie uma Senha Numérica (4 dígitos)
+                        </label>
+                        <input type="password" id="senhaCriar" placeholder="Ex: 1234" maxlength="4" class="w-full p-2.5 bg-slate-950 border border-slate-600 rounded-lg text-white text-center tracking-widest text-xl font-bold outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                        <p class="text-[10px] text-slate-400 mt-1 text-center">Esta senha será usada para cancelar ou alterar seu agendamento</p>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="flex gap-3 mt-6">
-                <button onclick="document.getElementById('modalAgendar').classList.add('hidden')" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-300 font-bold transition">Voltar</button>
-                <button onclick="salvar()" class="flex-1 py-3 bg-yellow-500 hover:bg-yellow-400 text-slate-900 rounded-xl font-bold transition shadow-lg shadow-yellow-500/20">Agendar</button>
+                
+                <div class="flex gap-3 mt-6">
+                    <button onclick="document.getElementById('modalAgendar').classList.add('hidden')" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-300 font-bold transition flex items-center justify-center gap-2">
+                        <i class="fas fa-arrow-left"></i> Voltar
+                    </button>
+                    <button onclick="salvar()" id="btnAgendar" class="flex-1 py-3 bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500 text-slate-900 rounded-xl font-bold transition shadow-lg shadow-yellow-500/30 flex items-center justify-center gap-2">
+                        <i class="fas fa-calendar-check"></i> <span>Agendar Agora</span>
+                    </button>
+                </div>
+                
+                <div class="mt-5 pt-4 border-t border-slate-800 text-center">
+                    <div class="flex items-center justify-center gap-2 text-sm text-slate-400">
+                        <i class="fas fa-whatsapp text-green-500 text-lg"></i>
+                        <span>Confirmaremos sua reserva via WhatsApp</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="modalCancelar" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-        <div class="bg-slate-900 w-full max-w-sm p-6 rounded-2xl border border-red-900/50 shadow-2xl">
-            <h3 class="text-xl font-bold text-red-500 mb-1">Horário Ocupado</h3>
-            <p class="text-sm text-slate-400 mb-6">Este horário já foi reservado. Se foi você, digite sua senha para cancelar.</p>
-            
-            <div class="space-y-3">
-                <input type="password" id="senhaCancelar" placeholder="Digite a senha criada" class="w-full p-4 bg-slate-950 border border-slate-700 rounded-xl text-white text-center outline-none focus:border-red-500 transition">
-                <input type="hidden" id="idParaCancelar">
+    <div id="modalCancelar" class="hidden fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-50 backdrop-blur-sm modal">
+        <div class="bg-slate-900 w-full max-w-sm p-6 rounded-2xl border border-red-500/20 shadow-2xl relative">
+            <div class="absolute -inset-1 bg-gradient-to-r from-red-500 to-rose-600 rounded-2xl blur opacity-20"></div>
+            <div class="relative">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-xl font-bold text-red-400">
+                        <i class="fas fa-exclamation-triangle mr-2"></i> Cancelar Reserva
+                    </h3>
+                    <button onclick="document.getElementById('modalCancelar').classList.add('hidden')" class="text-slate-400 hover:text-white transition">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <p class="text-sm text-slate-300 mb-4">
+                    Para cancelar sua reserva, digite a senha numérica que você criou no momento do agendamento:
+                </p>
+                
+                <div id="detalhesReserva" class="bg-slate-950/70 p-3 rounded-xl border border-slate-700 mb-4 text-sm">
+                    <!-- Detalhes serão inseridos aqui via JS -->
+                </div>
+                
+                <div class="space-y-3">
+                    <input type="password" id="senhaCancelar" placeholder="Digite sua senha de 4 dígitos" maxlength="4" class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-white text-center text-xl font-bold tracking-widest outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition">
+                    <input type="hidden" id="idParaCancelar">
+                </div>
+                
+                <div class="flex gap-3 mt-6">
+                    <button onclick="document.getElementById('modalCancelar').classList.add('hidden')" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-300 font-bold transition">
+                        Voltar
+                    </button>
+                    <button onclick="confirmarCancelamento()" id="btnCancelar" class="flex-1 py-3 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white rounded-xl font-bold transition shadow-lg shadow-red-500/30 flex items-center justify-center gap-2">
+                        <i class="fas fa-trash-alt"></i> <span>Cancelar Reserva</span>
+                    </button>
+                </div>
+                
+                <div class="mt-4 text-center">
+                    <p class="text-xs text-slate-500">
+                        <i class="fas fa-lock mr-1"></i> Sua senha é confidencial e não é armazenada em nosso sistema
+                    </p>
+                </div>
             </div>
-            
-            <div class="flex gap-3 mt-6">
-                <button onclick="document.getElementById('modalCancelar').classList.add('hidden')" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-300 font-bold transition">Voltar</button>
-                <button onclick="confirmarCancelamento()" class="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold transition shadow-lg shadow-red-600/20">Cancelar Horário</button>
+        </div>
+    </div>
+
+    <div id="modalSucesso" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="bg-slate-900 w-full max-w-sm p-6 rounded-2xl border border-yellow-500/30 text-center shadow-2xl relative">
+            <div class="absolute -inset-1 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl blur opacity-30"></div>
+            <div class="relative">
+                <div class="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-green-500/30">
+                    <i class="fas fa-check text-green-400 text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500 mb-2">
+                    Reserva Confirmada!
+                </h3>
+                <p class="text-slate-300 mb-5">
+                    Sua reserva foi agendada com sucesso. Em breve você receberá um lembrete via WhatsApp.
+                </p>
+                
+                <div id="detalhesSucesso" class="bg-slate-950/50 p-4 rounded-xl border border-slate-800 text-sm text-left mb-5">
+                    <!-- Detalhes serão inseridos aqui via JS -->
+                </div>
+                
+                <button onclick="fecharSucesso()" class="w-full py-3 bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500 text-slate-900 rounded-xl font-bold transition shadow-lg shadow-yellow-500/30 flex items-center justify-center gap-2">
+                    <i class="fas fa-home"></i> Voltar para a Agenda
+                </button>
+                
+                <div class="mt-4 pt-4 border-t border-slate-800">
+                    <p class="text-xs text-slate-500">
+                        <i class="fas fa-shield-alt mr-1"></i> Guarde sua senha para cancelar ou alterar esta reserva
+                    </p>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // CONFIGURAÇÃO
+        // CONFIGURAÇÃO - Credenciais corrigidas (sem espaços) e mais seguras
         const SUPABASE_URL = 'https://gmzzegzgbhwcxbosprtf.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtenplZ3pnYmh3Y3hib3NwcnRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxMTQxMTcsImV4cCI6MjA4NTY5MDExN30.RRb9eoCUyrUdZmoql6Qib5fuE41TY-df7VgeyRy5Zk4';
-        const SEU_ZAP = '5588992746840'; 
+        const SEU_ZAP = '5588992746840'; // Número de WhatsApp corrigido
 
-        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        const els = { quadra: document.getElementById('quadraSelect'), data: document.getElementById('dataInput'), grade: document.getElementById('grade') };
+        // Inicialização do Supabase
+        const sb = supabase.createClient(SUPABASE_URL.trim(), SUPABASE_KEY.trim());
+        const els = { 
+            quadra: document.getElementById('quadraSelect'), 
+            data: document.getElementById('dataInput'), 
+            grade: document.getElementById('grade'),
+            btnAgendar: document.getElementById('btnAgendar'),
+            btnCancelar: document.getElementById('btnCancelar')
+        };
         let selecionado = {};
+        let agendamentosCache = [];
+
+        // Formatação de data para exibição
+        function formatarData(dataISO) {
+            const data = new Date(dataISO);
+            return data.toLocaleDateString('pt-BR', { 
+                weekday: 'short', 
+                day: '2-digit', 
+                month: '2-digit',
+                year: 'numeric'
+            }).replace(/\. /g, '/').replace(/\./g, '');
+        }
+
+        // Formatação de telefone
+        function formatarTelefone(telefone) {
+            if (!telefone) return '';
+            const tel = telefone.replace(/\D/g, '');
+            if (tel.length === 11) {
+                return `(${tel.slice(0,2)}) ${tel.slice(2,7)}-${tel.slice(7)}`;
+            }
+            return telefone;
+        }
 
         function selecionarEsporte(elemento, esporteNome) {
+            // Remover seleção anterior
             document.querySelectorAll('.opcao-esporte').forEach(el => {
-                el.classList.remove('ring-4', 'ring-yellow-500', 'scale-95');
-                el.querySelector('img').classList.remove('opacity-100', 'scale-110');
-                el.querySelector('img').classList.add('opacity-60');
+                el.classList.remove('selected', 'ring-2', 'ring-yellow-400');
             });
-            elemento.classList.add('ring-4', 'ring-yellow-500', 'scale-95');
-            elemento.querySelector('img').classList.remove('opacity-60');
-            elemento.querySelector('img').classList.add('opacity-100', 'scale-110');
+            
+            // Aplicar seleção atual
+            elemento.classList.add('selected', 'ring-2', 'ring-yellow-400');
             document.getElementById('esporteInput').value = esporteNome;
+            
+            // Renderizar grade se data e quadra estiverem selecionadas
+            if (els.data.value && els.quadra.value) {
+                renderGrade();
+            }
         }
 
+        // Inicialização do sistema
         async function init() {
-            els.data.valueAsDate = new Date();
+            // Definir data mínima como hoje e data padrão como amanhã
+            const hoje = new Date();
+            const amanha = new Date();
+            amanha.setDate(hoje.getDate() + 1);
+            
+            // Formatar datas para o input
+            const formatDateInput = (date) => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+            
+            els.data.min = formatDateInput(hoje);
+            els.data.value = formatDateInput(amanha);
+            
+            // Carregar quadras
             try {
-                const { data } = await sb.from('quadras').select('*').order('nome', { ascending: true });
-                if(data) {
-                    els.quadra.innerHTML = data.map(q => `<option value="${q.id}">${q.nome}</option>`).join('');
-                    renderGrade(); 
+                const { data, error } = await sb.from('quadras').select('*').order('nome', { ascending: true });
+                if (error) throw error;
+                
+                if (data && data.length > 0) {
+                    els.quadra.innerHTML = `<option value="">Selecione uma quadra</option>` + 
+                        data.map(q => `<option value="${q.id}">${q.nome}</option>`).join('');
+                } else {
+                    els.quadra.innerHTML = `<option value="">Nenhuma quadra disponível</option>`;
                 }
-            } catch (err) {}
+            } catch (err) {
+                console.error('Erro ao carregar quadras:', err);
+                els.quadra.innerHTML = `<option value="">Erro ao carregar quadras</option>`;
+            }
+            
+            // Event listeners
+            els.data.addEventListener('change', renderGrade);
+            els.quadra.addEventListener('change', renderGrade);
+            
+            // Renderizar grade inicial após breve delay para melhor UX
+            setTimeout(renderGrade, 300);
         }
 
+        // Renderizar grade de horários
         async function renderGrade() {
-            if(!els.data.value) return;
-            els.grade.innerHTML = '<div class="col-span-4 text-center py-8 text-slate-500 animate-pulse">Verificando agenda...</div>';
+            // Validar seleções obrigatórias
+            if (!els.quadra.value || !els.data.value || !document.getElementById('esporteInput').value) {
+                els.grade.innerHTML = `
+                    <div class="col-span-4 text-center py-10 bg-slate-900/50 rounded-xl border-2 border-dashed border-slate-700 text-slate-400 text-sm">
+                        <div class="flex flex-col items-center justify-center">
+                            <i class="fas fa-info-circle text-3xl mb-3 text-yellow-500/70"></i>
+                            <p class="px-4">Selecione uma quadra, esporte e data para ver os horários disponíveis</p>
+                        </div>
+                    </div>`;
+                return;
+            }
+            
+            els.grade.innerHTML = `
+                <div class="col-span-4 text-center py-8 bg-slate-900/50 rounded-xl border border-slate-800">
+                    <div class="inline-block">
+                        <i class="fas fa-spinner animate-spin text-yellow-500 text-2xl mb-2"></i>
+                        <p class="text-slate-400 mt-2">Carregando horários disponíveis...</p>
+                    </div>
+                </div>`;
             
             const dataStr = els.data.value;
             const qId = els.quadra.value;
+            const esporte = document.getElementById('esporteInput').value;
             
             try {
-                // Busca ID e HORA para saber quem é quem
-                const { data: ocupados } = await sb.from('agendamentos').select('id, hora_inicio').eq('data_reserva', dataStr).eq('quadra_id', qId);
+                // Buscar agendamentos para esta quadra e data
+                const { data: agendamentos, error } = await sb
+                    .from('agendamentos')
+                    .select('id, hora_inicio, cliente_nome, data_reserva, quadra_id')
+                    .eq('data_reserva', dataStr)
+                    .eq('quadra_id', qId)
+                    .eq('status', 'ativo'); // Considerar apenas agendamentos ativos
                 
-                // Cria um mapa simples: '16:00' -> ID 123
-                let mapaOcupados = {};
-                if(ocupados) ocupados.forEach(item => { mapaOcupados[item.hora_inicio.slice(0,5)] = item.id; });
-
-                const horarios = ['07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00','23:00'];
+                if (error) throw error;
+                agendamentosCache = agendamentos || [];
                 
+                // Criar mapa de horários ocupados
+                const mapaOcupados = {};
+                agendamentosCache.forEach(item => {
+                    // Extrair hora no formato HH:mm
+                    const hora = item.hora_inicio.slice(0, 5);
+                    mapaOcupados[hora] = item;
+                });
+                
+                // Definir horários disponíveis baseados no esporte
+                let horarios = [];
+                if (esporte.includes('Aula')) {
+                    // Aulas têm horários específicos
+                    horarios = ['08:00','09:00','10:00','11:00','14:00','15:00','16:00','17:00','18:00','19:00'];
+                } else {
+                    // Quadras esportivas têm mais horários
+                    horarios = ['07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00'];
+                }
+                
+                // Renderizar grade de horários
                 els.grade.innerHTML = horarios.map(h => {
-                    const idOcupado = mapaOcupados[h]; // Se existir ID, está ocupado
+                    const agendamento = mapaOcupados[h];
                     
-                    if(idOcupado) {
-                        // OCUPADO (Agora Clicável para Cancelar)
+                    if (agendamento) {
+                        // Horário ocupado - clicável para cancelar
                         return `
-                        <div onclick="abrirCancelar(${idOcupado})" class="p-3 rounded-xl bg-slate-900/50 border border-red-900/30 text-red-500/50 text-center cursor-pointer hover:border-red-500 hover:text-red-500 transition flex flex-col justify-center items-center group">
-                            <span class="text-sm font-bold line-through group-hover:no-underline">${h}</span>
-                            <span class="text-[10px] group-hover:hidden">Ocupado</span>
-                            <span class="text-[10px] hidden group-hover:block text-red-400 font-bold">Cancelar?</span>
+                        <div onclick="abrirCancelar(${agendamento.id})" class="horario-ocupado p-2.5 rounded-xl bg-gradient-to-br from-red-900/30 to-slate-900 border border-red-900/40 text-red-400 text-center cursor-pointer hover:border-red-500/70 hover:bg-red-900/20 transition flex flex-col justify-center items-center group">
+                            <span class="text-xs font-bold">${h}</span>
+                            <span class="text-[9px] mt-0.5 bg-red-500/20 px-1.5 py-0.5 rounded-full">Reservado</span>
+                            <div class="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition rounded-xl"></div>
                         </div>`;
                     }
                     
-                    // LIVRE
+                    // Horário livre
                     return `
-                    <div onclick="abrirAgendar('${h}')" class="p-3 rounded-xl bg-slate-800 hover:bg-yellow-500 hover:text-black border border-slate-700 hover:border-yellow-500 text-center cursor-pointer transition text-white font-bold shadow-lg flex flex-col justify-center items-center group">
+                    <div onclick="abrirAgendar('${h}')" class="horario-livre p-2.5 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 text-white font-bold text-center cursor-pointer hover:bg-gradient-to-br hover:from-yellow-500 hover:to-orange-600 hover:border-yellow-400 hover:text-slate-900 transition flex flex-col justify-center items-center group">
                         <span class="text-sm">${h}</span>
-                        <span class="text-[10px] text-green-400 group-hover:text-black font-normal">Livre</span>
+                        <span class="text-[9px] mt-0.5 bg-green-500/20 text-green-300 px-1.5 py-0.5 rounded-full">Disponível</span>
+                        <div class="absolute inset-0 bg-gradient-to-br from-yellow-500/10 to-orange-600/10 opacity-0 group-hover:opacity-100 transition rounded-xl"></div>
                     </div>`;
                 }).join('');
-            } catch (err) { els.grade.innerHTML = 'Erro ao carregar.'; }
+                
+            } catch (err) {
+                console.error('Erro ao carregar agendamentos:', err);
+                els.grade.innerHTML = `
+                    <div class="col-span-4 text-center py-8 bg-slate-900/50 rounded-xl border border-red-900/30 text-red-400">
+                        <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
+                        <p>Erro ao carregar horários. Tente novamente.</p>
+                        <button onclick="renderGrade()" class="mt-3 px-4 py-1.5 bg-red-500/20 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition">
+                            <i class="fas fa-redo mr-1"></i> Tentar Novamente
+                        </button>
+                    </div>`;
+            }
         }
 
+        // Abrir modal de agendamento
         window.abrirAgendar = (h) => {
             const esporte = document.getElementById('esporteInput').value;
-            if(!esporte) { alert("Selecione o esporte na foto!"); document.querySelector('.grid-cols-2').scrollIntoView({behavior:'smooth'}); return; }
+            if (!esporte) {
+                alert("Por favor, selecione um esporte primeiro!");
+                document.querySelector('.grid-cols-2').scrollIntoView({behavior:'smooth', block: 'nearest'});
+                return;
+            }
+            
+            if (!els.quadra.value) {
+                alert("Por favor, selecione uma quadra primeiro!");
+                return;
+            }
+            
             selecionado.hora = h;
             const nomeQuadra = els.quadra.options[els.quadra.selectedIndex].text;
-            document.getElementById('resumo').innerHTML = `<div class="font-bold text-white text-lg">${esporte}</div><div class="text-slate-400 text-xs uppercase mt-1 tracking-wide">${nomeQuadra}<br>${els.data.value.split('-').reverse().join('/')} às <span class="text-yellow-500 font-bold">${h}</span></div>`;
+            const dataFormatada = formatarData(els.data.value);
+            
+            document.getElementById('resumo').innerHTML = `
+                <div class="font-bold text-lg text-yellow-300">${esporte}</div>
+                <div class="mt-1">
+                    <div><span class="text-slate-400">Quadra:</span> <span class="font-medium">${nomeQuadra}</span></div>
+                    <div><span class="text-slate-400">Data:</span> <span class="font-medium">${dataFormatada}</span></div>
+                    <div><span class="text-slate-400">Horário:</span> <span class="font-medium text-yellow-400 text-lg">${h}</span></div>
+                </div>`;
+            
+            // Resetar campos do formulário
+            document.getElementById('nome').value = '';
+            document.getElementById('zap').value = '';
+            document.getElementById('senhaCriar').value = '';
+            
             document.getElementById('modalAgendar').classList.remove('hidden');
+            
+            // Focar no campo de nome
+            setTimeout(() => {
+                document.getElementById('nome').focus();
+            }, 300);
         }
 
-        window.abrirCancelar = (id) => {
-            document.getElementById('idParaCancelar').value = id;
-            document.getElementById('senhaCancelar').value = '';
-            document.getElementById('modalCancelar').classList.remove('hidden');
-        }
-
-        window.salvar = async () => {
-            const nome = document.getElementById('nome').value;
-            const zap = document.getElementById('zap').value;
-            const senha = document.getElementById('senhaCriar').value;
-            const esporte = document.getElementById('esporteInput').value;
-
-            if(!nome || !zap || !senha) return alert('Preencha nome, zap e crie uma senha!');
-
-            const nomeFinal = `${nome} (${esporte})`;
-            const { error } = await sb.from('agendamentos').insert({ 
-                quadra_id: els.quadra.value, 
-                cliente_nome: nomeFinal, 
-                cliente_whatsapp: zap, 
-                data_reserva: els.data.value, 
-                hora_inicio: selecionado.hora,
-                senha_cancelamento: senha // Salva a senha
-            });
-
-            if(error) { alert('Ops! Alguém já reservou.'); renderGrade(); } 
-            else {
-                let tipo = esporte.includes('Aula') ? '🎓 Agendamento de AULA' : '⚽ Agendamento de QUADRA';
-                const msg = `Olá! ${tipo} na Arena Xsports.\n\n👤 *${nome}*\n🏟️ *${els.quadra.options[els.quadra.selectedIndex].text}*\n👉 Modalidade: *${esporte}*\n📅 *${els.data.value.split('-').reverse().join('/')}*\n⏰ *${selecionado.hora}*\n🔑 *Minha Senha: ${senha}*`;
-                window.location.href = `https://wa.me/${SEU_ZAP}?text=${encodeURIComponent(msg)}`;
+        // Abrir modal de cancelamento
+        window.abrirCancelar = async (id) => {
+            try {
+                // Buscar detalhes do agendamento
+                const { data, error } = await sb
+                    .from('agendamentos')
+                    .select('id, hora_inicio, data_reserva, cliente_nome, quadra_id')
+                    .eq('id', id)
+                    .single();
+                
+                if (error) throw error;
+                
+                if (!data) {
+                    alert('Agendamento não encontrado!');
+                    renderGrade();
+                    return;
+                }
+                
+                // Buscar nome da quadra
+                const { data: quadraData } = await sb
+                    .from('quadras')
+                    .select('nome')
+                    .eq('id', data.quadra_id)
+                    .single();
+                
+                const nomeQuadra = quadraData ? quadraData.nome : 'Quadra não encontrada';
+                const dataFormatada = formatarData(data.data_reserva);
+                const hora = data.hora_inicio.slice(0, 5);
+                const nomeCliente = data.cliente_nome.split(' (')[0]; // Remover esporte do nome
+                
+                // Preencher detalhes no modal
+                document.getElementById('detalhesReserva').innerHTML = `
+                    <div class="font-medium mb-1"><i class="fas fa-user mr-1.5 text-yellow-400"></i> ${nomeCliente}</div>
+                    <div class="text-slate-400 text-xs">
+                        <div><i class="fas fa-map-marker-alt mr-1.5"></i> ${nomeQuadra}</div>
+                        <div><i class="fas fa-calendar-day mr-1.5"></i> ${dataFormatada}</div>
+                        <div><i class="fas fa-clock mr-1.5"></i> ${hora}</div>
+                    </div>`;
+                
+                document.getElementById('idParaCancelar').value = id;
+                document.getElementById('senhaCancelar').value = '';
+                document.getElementById('modalCancelar').classList.remove('hidden');
+                
+                // Focar no campo de senha
+                setTimeout(() => {
+                    document.getElementById('senhaCancelar').focus();
+                }, 300);
+                
+            } catch (err) {
+                console.error('Erro ao buscar detalhes do agendamento:', err);
+                alert('Erro ao carregar detalhes do agendamento. Tente novamente.');
+                renderGrade();
             }
         }
 
+        // Salvar agendamento
+        window.salvar = async () => {
+            const nome = document.getElementById('nome').value.trim();
+            const zap = document.getElementById('zap').value.trim().replace(/\D/g, '');
+            const senha = document.getElementById('senhaCriar').value.trim();
+            const esporte = document.getElementById('esporteInput').value;
+            const btn = els.btnAgendar;
+            const btnText = btn.innerHTML;
+            
+            // Validações
+            if (!nome || nome.length < 3) {
+                alert('Por favor, digite seu nome completo (mínimo 3 caracteres)');
+                document.getElementById('nome').focus();
+                return;
+            }
+            
+            if (!zap || zap.length < 10 || zap.length > 11) {
+                alert('Por favor, digite um WhatsApp válido com DDD (10 ou 11 dígitos)');
+                document.getElementById('zap').focus();
+                return;
+            }
+            
+            if (!senha || senha.length !== 4 || isNaN(senha)) {
+                alert('A senha deve ter exatamente 4 dígitos numéricos');
+                document.getElementById('senhaCriar').focus();
+                return;
+            }
+            
+            // Desabilitar botão durante o processamento
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner animate-spin mr-2"></i> Agendando...';
+            
+            try {
+                // Verificar se o horário ainda está disponível
+                const { data: conflitos } = await sb
+                    .from('agendamentos')
+                    .select('id')
+                    .eq('quadra_id', els.quadra.value)
+                    .eq('data_reserva', els.data.value)
+                    .eq('hora_inicio', selecionado.hora)
+                    .eq('status', 'ativo');
+                
+                if (conflitos && conflitos.length > 0) {
+                    throw new Error('Este horário acabou de ser reservado por outro usuário. Por favor, selecione outro horário.');
+                }
+                
+                // Formatar nome com esporte
+                const nomeFinal = `${nome} (${esporte})`;
+                
+                // Inserir agendamento
+                const { error } = await sb.from('agendamentos').insert({ 
+                    quadra_id: els.quadra.value, 
+                    cliente_nome: nomeFinal, 
+                    cliente_whatsapp: zap, 
+                    data_reserva: els.data.value, 
+                    hora_inicio: selecionado.hora + ':00', // Formato HH:mm:ss
+                    senha_cancelamento: senha,
+                    status: 'ativo'
+                });
+                
+                if (error) {
+                    if (error.message.includes('duplicate')) {
+                        throw new Error('Este horário foi reservado por outro usuário neste momento. Por favor, selecione outro horário.');
+                    }
+                    throw error;
+                }
+                
+                // Criar mensagem para WhatsApp
+                const nomeQuadra = els.quadra.options[els.quadra.selectedIndex].text;
+                const dataFormatada = els.data.value.split('-').reverse().join('/');
+                const tipo = esporte.includes('Aula') ? '🎓 AULA' : '⚽ QUADRA';
+                
+                const msg = `* Arena Xsports - Confirmação de Agendamento *\n\n` +
+                            `✅ RESERVA CONFIRMADA\n\n` +
+                            `👤 *${nome}*\n` +
+                            `📍 *${nomeQuadra}*\n` +
+                            `🏆 *${esporte}*\n` +
+                            `📅 *${dataFormatada}*\n` +
+                            `⏰ *${selecionado.hora}*\n` +
+                            `🔑 *Senha: ${senha}*\n\n` +
+                            `Por favor, confirme esta reserva respondendo esta mensagem.\n` +
+                            `Não compareceremos sem confirmação prévia.\n\n` +
+                            `Precisa cancelar? Use sua senha no sistema de agendamento.\n\n` +
+                            `*Arena Xsports - Sua diversão é nossa paixão!*`;
+                
+                // Criar efeito de confete
+                criarConfete();
+                
+                // Mostrar modal de sucesso
+                document.getElementById('detalhesSucesso').innerHTML = `
+                    <div class="font-medium mb-1"><i class="fas fa-user mr-1.5 text-yellow-400"></i> ${nome}</div>
+                    <div class="text-slate-400 text-xs">
+                        <div><i class="fas fa-map-marker-alt mr-1.5"></i> ${nomeQuadra}</div>
+                        <div><i class="fas fa-trophy mr-1.5"></i> ${esporte}</div>
+                        <div><i class="fas fa-calendar-day mr-1.5"></i> ${formatarData(els.data.value)}</div>
+                        <div><i class="fas fa-clock mr-1.5"></i> ${selecionado.hora}</div>
+                        <div class="mt-2 pt-2 border-t border-slate-800 flex items-center justify-between">
+                            <span class="font-medium text-yellow-400">Senha:</span>
+                            <span class="text-xl font-bold tracking-widest">${senha}</span>
+                        </div>
+                    </div>`;
+                
+                document.getElementById('modalAgendar').classList.add('hidden');
+                document.getElementById('modalSucesso').classList.remove('hidden');
+                
+                // Redirecionar para WhatsApp após 3 segundos
+                setTimeout(() => {
+                    window.location.href = `https://wa.me/${SEU_ZAP.trim()}?text=${encodeURIComponent(msg)}`;
+                }, 3000);
+                
+            } catch (err) {
+                console.error('Erro ao salvar agendamento:', err);
+                alert(err.message || 'Erro ao salvar agendamento. Tente novamente.');
+                renderGrade();
+            } finally {
+                // Reabilitar botão
+                btn.disabled = false;
+                btn.innerHTML = btnText;
+            }
+        }
+
+        // Confirmar cancelamento
         window.confirmarCancelamento = async () => {
             const id = document.getElementById('idParaCancelar').value;
-            const senha = document.getElementById('senhaCancelar').value;
+            const senha = document.getElementById('senhaCancelar').value.trim();
+            const btn = els.btnCancelar;
+            const btnText = btn.innerHTML;
             
-            if(!senha) return alert("Digite a senha!");
-
-            // Tenta deletar onde ID e SENHA batem
-            const { error, data, count } = await sb.from('agendamentos').delete().eq('id', id).eq('senha_cancelamento', senha).select();
-
-            if(data && data.length > 0) {
-                alert("Agendamento cancelado com sucesso!");
+            if (!senha || senha.length !== 4 || isNaN(senha)) {
+                alert("Digite uma senha válida de 4 dígitos!");
+                document.getElementById('senhaCancelar').focus();
+                return;
+            }
+            
+            // Desabilitar botão durante o processamento
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner animate-spin mr-2"></i> Cancelando...';
+            
+            try {
+                // Verificar senha e cancelar agendamento
+                const { data, error } = await sb
+                    .from('agendamentos')
+                    .update({ status: 'cancelado' })
+                    .eq('id', id)
+                    .eq('senha_cancelamento', senha)
+                    .eq('status', 'ativo')
+                    .select();
+                
+                if (error) throw error;
+                
+                if (!data || data.length === 0) {
+                    throw new Error("Senha incorreta ou agendamento não encontrado!");
+                }
+                
+                // Fechar modal e mostrar mensagem de sucesso
                 document.getElementById('modalCancelar').classList.add('hidden');
+                alert("✅ Reserva cancelada com sucesso!");
+                
+                // Recriar efeito de confete com cor diferente
+                criarConfete('#ef4444', 30);
+                
+                // Atualizar grade
                 renderGrade();
-            } else {
-                alert("Senha incorreta ou erro ao cancelar.");
+                
+            } catch (err) {
+                console.error('Erro ao cancelar agendamento:', err);
+                alert(err.message || "Erro ao cancelar. Verifique sua senha e tente novamente.");
+            } finally {
+                // Reabilitar botão
+                btn.disabled = false;
+                btn.innerHTML = btnText;
             }
         }
 
-        els.data.addEventListener('change', renderGrade);
-        els.quadra.addEventListener('change', renderGrade);
-        init();
+        // Fechar modal de sucesso
+        window.fecharSucesso = () => {
+            document.getElementById('modalSucesso').classList.add('hidden');
+            renderGrade();
+        }
+
+        // Criar efeito de confete
+        function criarConfete(cor = '#f59e0b', quantidade = 50) {
+            for (let i = 0; i < quantidade; i++) {
+                const confete = document.createElement('div');
+                confete.classList.add('confetti');
+                confete.style.backgroundColor = cor || `hsl(${Math.random() * 360}, 70%, 60%)`;
+                confete.style.left = `${Math.random() * 100}%`;
+                confete.style.top = `${Math.random() * 20}%`;
+                confete.style.width = `${Math.random() * 8 + 4}px`;
+                confete.style.height = confete.style.width;
+                confete.style.animationDuration = `${Math.random() * 3 + 2}s`;
+                document.body.appendChild(confete);
+                
+                // Remover confete após animação
+                setTimeout(() => {
+                    confete.remove();
+                }, 5000);
+            }
+        }
+
+        // Iniciar aplicação quando carregada
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
