@@ -321,7 +321,7 @@
         const sb = supabase.createClient(SUPABASE_URL.trim(), SUPABASE_KEY.trim());
         const els = { 
             quadra: document.getElementById('quadraSelect'), 
-            data: document.getElementById('dataInput'), 
+             document.getElementById('dataInput'), 
             grade: document.getElementById('grade'),
             btnAgendar: document.getElementById('btnAgendar'),
             btnCancelar: document.getElementById('btnCancelar')
@@ -436,7 +436,7 @@
             
             try {
                 // Buscar agendamentos para esta quadra e data
-                const { data: agendamentos, error } = await sb
+                const {  agendamentos, error } = await sb
                     .from('agendamentos')
                     .select('id, hora_inicio, cliente_nome, data_reserva, quadra_id')
                     .eq('data_reserva', dataStr)
@@ -558,7 +558,7 @@
                 }
                 
                 // Buscar nome da quadra
-                const { data: quadraData } = await sb
+                const {  quadraData } = await sb
                     .from('quadras')
                     .select('nome')
                     .eq('id', data.quadra_id)
@@ -628,7 +628,7 @@
             
             try {
                 // Verificar se o horário ainda está disponível
-                const { data: conflitos } = await sb
+                const {  conflitos } = await sb
                     .from('agendamentos')
                     .select('id')
                     .eq('quadra_id', els.quadra.value)
